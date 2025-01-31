@@ -1,37 +1,90 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
-    .bought {
-      text-decoration: line-through;
-      color: gray;
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: #f8f9fa;
     }
+    
+    h1 {
+      text-align: center;
+    }
+    
+    .container {
+      max-width: 400px;
+      margin: auto;
+      background: white;
+      padding: 15px;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
     .category {
       font-weight: bold;
       font-size: 1.2em;
-      margin-top: 10px;
+      margin-top: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
+
     .add-button, .reset-button {
       cursor: pointer;
       color: white;
       border: none;
-      padding: 5px 10px;
+      padding: 10px;
       font-size: 16px;
-      margin-left: 10px;
+      border-radius: 5px;
     }
+
     .add-button {
       background-color: green;
     }
+
     .reset-button {
       background-color: red;
+      display: block;
+      width: 100%;
+      margin: 15px 0;
+    }
+
+    ul {
+      list-style-type: none;
+      padding: 0;
+    }
+
+    li {
+      background: #ffffff;
+      padding: 12px;
+      margin: 5px 0;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: background 0.3s;
+    }
+
+    li:hover {
+      background: #f1f1f1;
+    }
+
+    .bought {
+      text-decoration: line-through;
+      color: gray;
     }
   </style>
   <script>
-    document.addEventListener("DOMContentLoaded", loadList); // Load saved items
+    document.addEventListener("DOMContentLoaded", loadList);
 
     function toggleBought(event) {
       event.target.classList.toggle("bought");
-      saveList(); // Save changes
+      saveList();
     }
 
     function addItem(categoryId) {
@@ -42,13 +95,13 @@
         li.textContent = newItem;
         li.onclick = toggleBought;
         list.appendChild(li);
-        saveList(); // Save after adding
+        saveList();
       }
     }
 
     function resetList() {
-      document.querySelectorAll("ul").forEach(ul => ul.innerHTML = ""); // Clears all lists
-      localStorage.removeItem("groceryList"); // Remove from local storage
+      document.querySelectorAll("ul").forEach(ul => ul.innerHTML = ""); 
+      localStorage.removeItem("groceryList");
     }
 
     function saveList() {
@@ -61,7 +114,7 @@
         });
         groceryData[category] = items;
       });
-      localStorage.setItem("groceryList", JSON.stringify(groceryData)); // Save to Local Storage
+      localStorage.setItem("groceryList", JSON.stringify(groceryData));
     }
 
     function loadList() {
@@ -84,36 +137,39 @@
 </head>
 <body>
 
-  <h1>Grocery List</h1>
+  <div class="container">
+    <h1>Grocery List</h1>
 
-  <button class="reset-button" onclick="resetList()">Reset List</button>
+    <button class="reset-button" onclick="resetList()">Reset List</button>
 
-  <div>
-    <div class="category">Fruits
-      <button class="add-button" onclick="addItem('fruits-list')">+</button>
+    <div>
+      <div class="category">Fruits
+        <button class="add-button" onclick="addItem('fruits-list')">+</button>
+      </div>
+      <ul id="fruits-list"></ul>
     </div>
-    <ul id="fruits-list"></ul>
-  </div>
 
-  <div>
-    <div class="category">Vegetables
-      <button class="add-button" onclick="addItem('vegetables-list')">+</button>
+    <div>
+      <div class="category">Vegetables
+        <button class="add-button" onclick="addItem('vegetables-list')">+</button>
+      </div>
+      <ul id="vegetables-list"></ul>
     </div>
-    <ul id="vegetables-list"></ul>
-  </div>
 
-  <div>
-    <div class="category">Protein
-      <button class="add-button" onclick="addItem('protein-list')">+</button>
+    <div>
+      <div class="category">Protein
+        <button class="add-button" onclick="addItem('protein-list')">+</button>
+      </div>
+      <ul id="protein-list"></ul>
     </div>
-    <ul id="protein-list"></ul>
-  </div>
 
-  <div>
-    <div class="category">Carbs
-      <button class="add-button" onclick="addItem('carbs-list')">+</button>
+    <div>
+      <div class="category">Carbs
+        <button class="add-button" onclick="addItem('carbs-list')">+</button>
+      </div>
+      <ul id="carbs-list"></ul>
     </div>
-    <ul id="carbs-list"></ul>
+
   </div>
 
 </body>
