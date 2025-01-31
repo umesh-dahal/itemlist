@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    .bought {
+      text-decoration: line-through;
+      color: gray;
+    }
+    .category {
+      font-weight: bold;
+      font-size: 1.2em;
+      margin-top: 10px;
+    }
+    .add-button {
+      cursor: pointer;
+      color: white;
+      background-color: green;
+      border: none;
+      padding: 5px 10px;
+      font-size: 16px;
+      margin-left: 10px;
+    }
+  </style>
+  <script>
+    function toggleBought(event) {
+      event.target.classList.toggle("bought");
+    }
+
+    function addItem(categoryId) {
+      let newItem = prompt("Enter a new item:");
+      if (newItem) {
+        let list = document.getElementById(categoryId);
+        let li = document.createElement("li");
+        li.textContent = newItem;
+        li.onclick = toggleBought;
+        list.appendChild(li);
+      }
+    }
+  </script>
+</head>
+<body>
+
+  <h1>Grocery List</h1>
+
+  <div>
+    <div class="category">Fruits
+      <button class="add-button" onclick="addItem('fruits-list')">+</button>
+    </div>
+    <ul id="fruits-list">
+      <li onclick="toggleBought(event)">Banana</li>
+      <li onclick="toggleBought(event)">Apple</li>
+    </ul>
+  </div>
+
+  <div>
+    <div class="category">Vegetables
+      <button class="add-button" onclick="addItem('vegetables-list')">+</button>
+    </div>
+    <ul id="vegetables-list">
+      <li onclick="toggleBought(event)">Carrot</li>
+      <li onclick="toggleBought(event)">Broccoli</li>
+    </ul>
+  </div>
+
+  <div>
+    <div class="category">Protein
+      <button class="add-button" onclick="addItem('protein-list')">+</button>
+    </div>
+    <ul id="protein-list">
+      <li onclick="toggleBought(event)">Chicken</li>
+      <li onclick="toggleBought(event)">Eggs</li>
+    </ul>
+  </div>
+
+  <div>
+    <div class="category">Carbs
+      <button class="add-button" onclick="addItem('carbs-list')">+</button>
+    </div>
+    <ul id="carbs-list">
+      <li onclick="toggleBought(event)">Rice</li>
+      <li onclick="toggleBought(event)">Bread</li>
+    </ul>
+  </div>
+
+</body>
+</html>
