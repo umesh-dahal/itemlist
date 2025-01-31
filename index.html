@@ -27,8 +27,11 @@
     }
   </style>
   <script>
+    document.addEventListener("DOMContentLoaded", loadList); // Load saved items
+
     function toggleBought(event) {
       event.target.classList.toggle("bought");
+      saveList(); // Save changes
     }
 
     function addItem(categoryId) {
@@ -39,11 +42,43 @@
         li.textContent = newItem;
         li.onclick = toggleBought;
         list.appendChild(li);
+        saveList(); // Save after adding
       }
     }
 
     function resetList() {
       document.querySelectorAll("ul").forEach(ul => ul.innerHTML = ""); // Clears all lists
+      localStorage.removeItem("groceryList"); // Remove from local storage
+    }
+
+    function saveList() {
+      let groceryData = {};
+      document.querySelectorAll("ul").forEach(ul => {
+        let category = ul.id;
+        let items = [];
+        ul.querySelectorAll("li").forEach(li => {
+          items.push({ text: li.textContent, bought: li.classList.contains("bought") });
+        });
+        groceryData[category] = items;
+      });
+      localStorage.setItem("groceryList", JSON.stringify(groceryData)); // Save to Local Storage
+    }
+
+    function loadList() {
+      let savedData = localStorage.getItem("groceryList");
+      if (savedData) {
+        let groceryData = JSON.parse(savedData);
+        for (let category in groceryData) {
+          let list = document.getElementById(category);
+          groceryData[category].forEach(item => {
+            let li = document.createElement("li");
+            li.textContent = item.text;
+            if (item.bought) li.classList.add("bought");
+            li.onclick = toggleBought;
+            list.appendChild(li);
+          });
+        }
+      }
     }
   </script>
 </head>
@@ -57,40 +92,28 @@
     <div class="category">Fruits
       <button class="add-button" onclick="addItem('fruits-list')">+</button>
     </div>
-    <ul id="fruits-list">
-      <li onclick="toggleBought(event)">Banana</li>
-      <li onclick="toggleBought(event)">Apple</li>
-    </ul>
+    <ul id="fruits-list"></ul>
   </div>
 
   <div>
     <div class="category">Vegetables
       <button class="add-button" onclick="addItem('vegetables-list')">+</button>
     </div>
-    <ul id="vegetables-list">
-      <li onclick="toggleBought(event)">Carrot</li>
-      <li onclick="toggleBought(event)">Broccoli</li>
-    </ul>
+    <ul id="vegetables-list"></ul>
   </div>
 
   <div>
     <div class="category">Protein
       <button class="add-button" onclick="addItem('protein-list')">+</button>
     </div>
-    <ul id="protein-list">
-      <li onclick="toggleBought(event)">Chicken</li>
-      <li onclick="toggleBought(event)">Eggs</li>
-    </ul>
+    <ul id="protein-list"></ul>
   </div>
 
   <div>
     <div class="category">Carbs
       <button class="add-button" onclick="addItem('carbs-list')">+</button>
     </div>
-    <ul id="carbs-list">
-      <li onclick="toggleBought(event)">Rice</li>
-      <li onclick="toggleBought(event)">Bread</li>
-    </ul>
+    <ul id="carbs-list"></ul>
   </div>
 
 </body>
