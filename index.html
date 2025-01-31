@@ -11,14 +11,19 @@
       font-size: 1.2em;
       margin-top: 10px;
     }
-    .add-button {
+    .add-button, .reset-button {
       cursor: pointer;
       color: white;
-      background-color: green;
       border: none;
       padding: 5px 10px;
       font-size: 16px;
       margin-left: 10px;
+    }
+    .add-button {
+      background-color: green;
+    }
+    .reset-button {
+      background-color: red;
     }
   </style>
   <script>
@@ -36,11 +41,17 @@
         list.appendChild(li);
       }
     }
+
+    function resetList() {
+      document.querySelectorAll("ul").forEach(ul => ul.innerHTML = ""); // Clears all lists
+    }
   </script>
 </head>
 <body>
 
   <h1>Grocery List</h1>
+
+  <button class="reset-button" onclick="resetList()">Reset List</button>
 
   <div>
     <div class="category">Fruits
