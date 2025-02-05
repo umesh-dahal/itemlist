@@ -173,8 +173,11 @@
       let savedData = localStorage.getItem("groceryList");
       if (savedData) {
         let groceryData = JSON.parse(savedData);
+        document.getElementById("categories-container").innerHTML = "";
         for (let category in groceryData) {
           addCategory(category.replace("-list", ""));
+        }
+        for (let category in groceryData) {
           let list = document.getElementById(category);
           groceryData[category].forEach(item => {
             let li = document.createElement("li");
