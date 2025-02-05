@@ -1,204 +1,188 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 10px;
-      background-color: #f8f9fa;
-    }
-    
-    h1 {
-      text-align: left;
-      font-size: 20px;
-      margin-bottom: 5px;
-    }
-    
-    .container {
-      max-width: 350px;
-      margin: auto;
-      background: white;
-      padding: 15px;
-      border-radius: 10px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    }
-
-    .add-button, .delete-button, .input-container input, .category {
-      height: 30px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .add-button {
-      cursor: pointer;
-      color: white;
-      border: none;
-      padding: 5px;
-      font-size: 14px;
-      border-radius: 5px;
-      background-color: green;
-      width: 30px;
-    }
-
-    .delete-button {
-      cursor: pointer;
-      background-color: red;
-      color: white;
-      border: none;
-      padding: 5px;
-      font-size: 14px;
-      border-radius: 5px;
-      width: 30px;
-    }
-
-    ul {
-      list-style-type: none;
-      padding: 0;
-      margin-left: 15px;
-    }
-
-    li {
-      background: #ffffff;
-      padding: 8px;
-      margin: 5px 0;
-      border-radius: 5px;
-      cursor: pointer;
-      font-size: 14px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      transition: background 0.3s;
-    }
-
-    li:hover {
-      background: #f1f1f1;
-    }
-
-    .bought {
-      text-decoration: line-through;
-      color: gray;
-    }
-
-    .input-container {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 10px;
-    }
-
-    .input-container input {
-      flex: 1;
-      padding: 5px;
-      font-size: 14px;
-      border-radius: 5px;
-      border: 1px solid #ccc;
-    }
-
-    .category {
-      font-weight: bold;
-      font-size: 16px;
-      text-transform: uppercase;
-      margin-top: 10px;
-      justify-content: flex-start;
-    }
-  </style>
-  <script>
-    document.addEventListener("DOMContentLoaded", loadList);
-
-    function toggleBought(event) {
-      event.target.classList.toggle("bought");
-      saveList();
-    }
-
-    function addCategory(categoryName = "") {
-      let input = document.getElementById("category-name");
-      if (!categoryName) categoryName = input.value.trim();
-      if (categoryName) {
-        let container = document.getElementById("categories-container");
-        let categoryId = categoryName.toLowerCase().replace(/\s+/g, '-') + "-list";
-        
-        if (!document.getElementById(categoryId)) {
-          let categoryDiv = document.createElement("div");
-          categoryDiv.innerHTML = `<div class="category" style="justify-content: flex-start;">${categoryName}  
-            <button class="delete-button" onclick="deleteCategory('${categoryId}', this)">-</button></div>
-            <div class="input-container"><input type="text" id="${categoryId}-input" placeholder="Enter item"> 
-            <button class="add-button" onclick="addItem('${categoryId}', document.getElementById('${categoryId}-input'))">+</button></div>
-            <ul id="${categoryId}"></ul>`;
-          container.appendChild(categoryDiv);
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=devi-bce, initial-scale=1.0">
+    <title>Grocery List</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 375px;
+            margin: auto;
+            padding: 20px;
+            background-color: #f8f8f8;
+            text-align: left;
         }
-        input.value = "";
-        saveList();
-      }
-    }
-
-    function addItem(categoryId, inputElement) {
-      let newItem = inputElement.value.trim();
-      if (newItem) {
-        let list = document.getElementById(categoryId);
-        let li = document.createElement("li");
-        li.innerHTML = `${newItem} <button class='delete-button' onclick='deleteItem(this)'>-</button>`;
-        li.onclick = toggleBought;
-        list.appendChild(li);
-        inputElement.value = "";
-        saveList();
-      }
-    }
-
-    function deleteItem(button) {
-      button.parentElement.remove();
-      saveList();
-    }
-
-    function deleteCategory(categoryId, button) {
-      button.parentElement.parentElement.remove();
-      saveList();
-    }
-
-    function saveList() {
-      let groceryData = {};
-      document.querySelectorAll("ul").forEach(ul => {
-        let category = ul.id;
-        let items = [];
-        ul.querySelectorAll("li").forEach(li => {
-          items.push({ text: li.firstChild.textContent.trim(), bought: li.classList.contains("bought") });
-        });
-        groceryData[category] = items;
-      });
-      localStorage.setItem("groceryList", JSON.stringify(groceryData));
-    }
-
-    function loadList() {
-      let savedData = localStorage.getItem("groceryList");
-      if (savedData) {
-        let groceryData = JSON.parse(savedData);
-        document.getElementById("categories-container").innerHTML = "";
-        for (let category in groceryData) {
-          addCategory(category.replace("-list", ""));
+        h2 {
+            text-align: left;
         }
-        for (let category in groceryData) {
-          let list = document.getElementById(category);
-          groceryData[category].forEach(item => {
-            let li = document.createElement("li");
-            li.innerHTML = `${item.text} <button class='delete-button' onclick='deleteItem(this)'>-</button>`;
-            if (item.bought) li.classList.add("bought");
-            li.onclick = toggleBought;
-            list.appendChild(li);
-          });
+        .category, .category-card {
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin: 10px 0;
+            background: white;
+            max-width: 100%;
         }
-      }
-    }
-  </script>
+        .category {
+            text-transform: uppercase;
+        }
+        .category h3 {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        button {
+            background: green;
+            color: white;
+            border: none;
+            padding: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            width: 50px;
+            height: 35px;
+            text-align: center;
+        }
+        .item-list button {
+            background: red;
+        }
+        input {
+            padding: 5px;
+            margin-top: 5px;
+            width: calc(100% - 65px);
+            font-size: 14px;
+            text-transform: none;
+        }
+        .input-container {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .item-list {
+            list-style-type: none;
+            padding: 0;
+        }
+        .item-list li {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px 0;
+        }
+        .item-list li span {
+            cursor: pointer;
+            text-transform: none;
+        }
+        .item-list li span::before {
+            content: "▪ ";
+            color: black;
+        }
+        .strikethrough {
+            text-decoration: line-through;
+            color: gray;
+        }
+    </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Grocery List</h1>
-    <div class="input-container">
-      <input type="text" id="category-name" placeholder="Enter category name">
-      <button class="add-button" onclick="addCategory()">+</button>
+    <h2>Grocery List</h2>
+    <div class="category-card">
+        <div class="input-container">
+            <input type="text" id="categoryName" placeholder="Enter category name">
+            <button onclick="addCategory()">+</button>
+        </div>
     </div>
-    <div id="categories-container"></div>
-  </div>
+    <div id="categories"></div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", loadCategories);
+
+        function saveCategories(categories) {
+            localStorage.setItem("groceryCategories", JSON.stringify(categories));
+        }
+
+        function loadCategories() {
+            const categories = JSON.parse(localStorage.getItem("groceryCategories")) || {};
+            const container = document.getElementById("categories");
+            container.innerHTML = "";
+            Object.keys(categories).forEach(category => renderCategory(category, categories[category]));
+        }
+
+        function addCategory() {
+            const name = document.getElementById("categoryName").value.trim().toUpperCase();
+            if (!name) return;
+            let categories = JSON.parse(localStorage.getItem("groceryCategories")) || {};
+            if (!categories[name]) {
+                categories[name] = [];
+                saveCategories(categories);
+                renderCategory(name, categories[name]);
+            }
+            document.getElementById("categoryName").value = "";
+        }
+
+        function deleteCategory(name) {
+            let categories = JSON.parse(localStorage.getItem("groceryCategories")) || {};
+            delete categories[name];
+            saveCategories(categories);
+            loadCategories();
+        }
+
+        function addItem(category) {
+            const itemInput = document.getElementById(`input-${category}`);
+            let itemName = itemInput.value.trim();
+            if (!itemName) return;
+            itemName = itemName.charAt(0).toUpperCase() + itemName.slice(1); // Capitalize first letter
+            let categories = JSON.parse(localStorage.getItem("groceryCategories"));
+            categories[category].push({ name: itemName, struck: false });
+            saveCategories(categories);
+            renderCategory(category, categories[category], false);
+            itemInput.value = "";
+        }
+
+        function deleteItem(category, index) {
+            let categories = JSON.parse(localStorage.getItem("groceryCategories"));
+            categories[category].splice(index, 1);
+            saveCategories(categories);
+            renderCategory(category, categories[category], false);
+        }
+
+        function toggleStrikeThrough(category, index) {
+            let categories = JSON.parse(localStorage.getItem("groceryCategories"));
+            categories[category][index].struck = !categories[category][index].struck;
+            saveCategories(categories);
+            renderCategory(category, categories[category], false);
+        }
+
+        function renderCategory(name, items, reset = true) {
+            const container = document.getElementById("categories");
+            if (reset) {
+                container.innerHTML = "";
+                Object.keys(JSON.parse(localStorage.getItem("groceryCategories")) || {}).forEach(cat => {
+                    if (cat !== name) {
+                        renderCategory(cat, JSON.parse(localStorage.getItem("groceryCategories"))[cat], false);
+                    }
+                });
+            }
+            let categoryDiv = document.getElementById(`category-${name}`);
+            if (!categoryDiv) {
+                categoryDiv = document.createElement("div");
+                categoryDiv.classList.add("category");
+                categoryDiv.id = `category-${name}`;
+                categoryDiv.innerHTML = `
+                    <h3>${name} <button onclick="deleteCategory('${name}')" style="background: red;">-</button></h3>
+                    <div class="input-container">
+                        <input type="text" id="input-${name}" placeholder="Add item">
+                        <button onclick="addItem('${name}')">+</button>
+                    </div>
+                    <ul id="list-${name}" class="item-list"></ul>
+                `;
+                container.appendChild(categoryDiv);
+            }
+            const list = document.getElementById(`list-${name}`);
+            list.innerHTML = "";
+            items.forEach((item, index) => {
+                const li = document.createElement("li");
+                li.innerHTML = `<span onclick="toggleStrikeThrough('${name}', ${index})" class="${item.struck ? 'strikethrough' : ''}">${item.name}</span> <button onclick="deleteItem('${name}', ${index})">X</button>`;
+                list.appendChild(li);
+            });
+        }
+    </script>
 </body>
 </html>
