@@ -315,66 +315,28 @@
 
         // ----- RESTORE LATEST BACKUP FROM DRIVE -----
         async function loadFromCloud() {
-            const btn = document.getElementById('restoreBtn');
-            if (btn) {
-                btn.disabled = true;
-                btn.textContent = '⏳';
-            }
-
-            try {
-                updateCloudStatus('saving', '📥 Loading from Drive...');
-
-                const response = await fetch(BACKUP_URL, { method: 'GET' });
-                const text = await response.text();
-                let result;
-
-                try {
-                    result = JSON.parse(text);
-                } catch (e) {
-                    throw new Error('Apps Script did not return JSON.');
-                }
-
-                if (!result.success) {
-                    alert('No backup found: ' + (result.message || 'Unknown error'));
-                    updateCloudStatus('error', '⚠ Restore failed');
-                    return;
-                }
-
-                const loadedData = result.content || result.data;
-
-                if (!loadedData || !loadedData.stores) {
-                    alert('Backup file exists, but it does not contain valid grocery data.');
-                    updateCloudStatus('error', '⚠ Invalid backup');
-                    return;
-                }
-
-                if (!confirm('Replace this browser data with the latest Google Drive backup?')) {
-                    updateCloudStatus('idle', '☁ Restore cancelled');
-                    return;
-                }
-
-                data = loadedData;
-                saveLocalOnly();
-
-                if (window._currentStore && !data.stores[window._currentStore]) {
-                    goHome();
-                } else if (window._currentStore) {
+        
+            const response = await fetch(BACKUP_URL);
+        
+            const result = await response.json();
+        
+            if (result.success) {
+        
+                data = result.content;
+        
+                localStorage.setItem(
+                    "groceryStoresData",
+                    JSON.stringify(data)
+                );
+        
+                renderHome();
+        
+                if (window._currentStore) {
                     renderStoreDetail(window._currentStore);
-                } else {
-                    renderHome();
                 }
-
-                updateCloudStatus('idle', '☁ Restored from Drive');
-            } catch (error) {
-                console.error('Restore error:', error);
-                alert('Restore failed: ' + error.message);
-                updateCloudStatus('error', '⚠ Restore failed');
-            } finally {
-                if (btn) {
-                    btn.disabled = false;
-                    btn.textContent = 'Restore';
-                }
+        
             }
+        
         }
 
         window.loadFromCloud = loadFromCloud;
@@ -401,7 +363,7 @@
                 container.appendChild(tile);
             });
         }
-
+        
         // ----- OPEN STORE -----
         function openStore(storeName) {
             document.getElementById('homeView').classList.add('hidden');
