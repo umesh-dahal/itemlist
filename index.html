@@ -44,7 +44,7 @@
             opacity: 0.6;
             background: #fafbfc;
             border-color: #dce2ec;
-            order: 999; /* move to bottom via flex order, but we sort in JS */
+            order: 999; /* fallback, but we sort in JS */
         }
         .category-card.done .category-head {
             text-decoration: line-through;
@@ -79,6 +79,8 @@
         .empty-state { color: #94a3b8; text-align: center; padding: 30px 0; font-size: 0.95rem; }
         .category-container { display: flex; flex-direction: column; }
         .mt-2 { margin-top: 6px; }
+        /* expanded state */
+        .item-list-wrapper { display: block; }
     </style>
 </head>
 <body>
@@ -88,7 +90,7 @@
         <h2>🛒 Stores</h2>
         <div class="subhead"><span>your grocery hubs</span><span style="font-size:0.75rem; background:#eef2f6; padding:4px 14px; border-radius:40px;">tap to open</span></div>
         <div class="input-row">
-            <input type="text" id="storeInput" placeholder="Add store … Rewe, Rossmann" />
+            <input type="text" id="storeInput" placeholder="Add topic …" />
             <button class="btn" id="addStoreBtn">+</button>
         </div>
         <div id="storeList" class="store-grid"></div>
@@ -121,6 +123,8 @@
     (function() {
         // ----- data -----
         let data = { stores: {} };
+        // track which categories are expanded (by store+cat key)
+        const expandedMap = new Map();
 
         // ----- helpers -----
         function loadData() {
@@ -183,6 +187,7 @@
             document.getElementById('homeView').classList.remove('hidden');
             renderHome();
             window._currentStore = null;
+            expandedMap.clear(); // clear expansion state on home
         }
 
         // ----- render detail with sorting & stats -----
@@ -229,10 +234,13 @@
                 `;
                 card.appendChild(head);
 
-                // item list (hidden by default, but we show only if there are items? we keep hidden and toggle on click)
+                // item list wrapper
                 const listWrapper = document.createElement('div');
                 listWrapper.className = 'item-list-wrapper';
-                listWrapper.style.display = 'none'; // hidden initially
+                // check expansion state: default to expanded if no state, or if it was expanded before
+                const key = `${storeName}||${cat}`;
+                const isExpanded = expandedMap.has(key) ? expandedMap.get(key) : true; // default open
+                listWrapper.style.display = isExpanded ? 'block' : 'none';
 
                 const ul = document.createElement('ul');
                 ul.className = 'item-list';
@@ -265,11 +273,16 @@
 
                 card.appendChild(listWrapper);
 
-                // toggle list visibility on header click
+                // toggle list visibility on header click — store state
                 head.addEventListener('click', (e) => {
                     if (e.target.closest('button')) return;
                     const wrapper = card.querySelector('.item-list-wrapper');
-                    if (wrapper) wrapper.style.display = wrapper.style.display === 'none' ? 'block' : 'none';
+                    if (!wrapper) return;
+                    const isNowVisible = wrapper.style.display !== 'none';
+                    wrapper.style.display = isNowVisible ? 'none' : 'block';
+                    // update map
+                    const key = `${storeName}||${cat}`;
+                    expandedMap.set(key, !isNowVisible);
                 });
 
                 container.appendChild(card);
@@ -356,6 +369,9 @@
             name = name.charAt(0).toUpperCase() + name.slice(1);
             data.stores[store][cat].push({ name, struck: false });
             saveData();
+            // preserve expansion state: keep current category open after adding
+            const key = `${store}||${cat}`;
+            expandedMap.set(key, true); // ensure it stays open
             renderStoreDetail(store);
         }
 
@@ -366,6 +382,9 @@
                 if (confirm(`Category "${cat}" is empty. Remove it?`)) { deleteCategory(store, cat); return; }
             }
             saveData();
+            // keep category open after item deletion
+            const key = `${store}||${cat}`;
+            expandedMap.set(key, true);
             renderStoreDetail(store);
         }
 
