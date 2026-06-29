@@ -146,8 +146,7 @@
         <!-- Cloud Status Bar -->
         <div class="cloud-status">
             <span class="status-dot" id="cloudStatusDot"></span>
-            <span class="status-text" id="cloudStatusText">💾 Local only</span>
-            <button class="manual-btn" id="syncBtn" onclick="manualSync()">Sync now</button>
+            <span class="status-text" id="cloudStatusText">☁ Ready to save</span>
             <button class="manual-btn" id="restoreBtn" onclick="loadFromCloud()">Restore</button>
         </div>
         <div style="height: 10px;"></div>
@@ -159,48 +158,79 @@
         // ----- DATA LAYER -----
         let data = { stores: {} };
         let activeCategoryKey = null;
-        let syncTimeout = null;
+        let saveTimer = null;
         let isSyncing = false;
-        let cloudEnabled = false;
+        let pendingSync = false;
 
         // ----- CLOUD CONFIG -----
-        // REPLACE THIS WITH YOUR DEPLOYED WEB APP URL
-        const BACKUP_URL = 'https://script.google.com/macros/s/AKfycbwhkFP4Kv1PYCEaxcbsbnCkP1o4qeoajb6bCqTKqEYwGQQewTwyRlPDPpXz5j79JaE5/exec';
+        // IMPORTANT: keep this as your deployed Google Apps Script Web App /exec URL.
+        const BACKUP_URL = 'https://script.google.com/macros/s/AKfycbw3KZrmoaFJimocuwOUt_fgi5kjGeqNWV_HWrwIx07muiWtLUB6XHU0uHz6rVL7WiJM/exec';
 
-        const response = await fetch(BACKUP_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-          body: JSON.stringify({
-            action: 'save',
-            store: storeName,
-            content: JSON.parse(dataStr)
-          })
-        });
-        
         // ----- HELPERS -----
         function loadData() {
             const stored = localStorage.getItem('groceryStoresData');
+
             if (stored) {
-                try { data = JSON.parse(stored); if (!data.stores) data.stores = {}; } 
-                catch(e) { data.stores = {}; }
+                try {
+                    data = JSON.parse(stored);
+                    if (!data.stores) data.stores = {};
+                } catch (e) {
+                    data = { stores: {} };
+                }
             } else {
                 data.stores = {
-                    'Rewe': { 'Fruits': [{name:'Apples',struck:false},{name:'Bananas',struck:false},{name:'Oranges',struck:true}], 'Dairy': [{name:'Milk',struck:false},{name:'Yogurt',struck:true}] },
-                    'Rossmann': { 'Health': [{name:'Vitamin C',struck:false},{name:'Zinc',struck:true}], 'Snacks': [{name:'Protein bar',struck:false},{name:'Nuts',struck:false},{name:'Chips',struck:true}] }
+                    'Rewe': {
+                        'Fruits': [
+                            { name: 'Apples', struck: false },
+                            { name: 'Bananas', struck: false },
+                            { name: 'Oranges', struck: true }
+                        ],
+                        'Dairy': [
+                            { name: 'Milk', struck: false },
+                            { name: 'Yogurt', struck: true }
+                        ]
+                    },
+                    'Rossmann': {
+                        'Health': [
+                            { name: 'Vitamin C', struck: false },
+                            { name: 'Zinc', struck: true }
+                        ],
+                        'Snacks': [
+                            { name: 'Protein bar', struck: false },
+                            { name: 'Nuts', struck: false },
+                            { name: 'Chips', struck: true }
+                        ]
+                    }
                 };
+                saveLocalOnly();
             }
+
             Object.keys(data.stores).forEach(s => {
-                if (typeof data.stores[s] !== 'object' || Array.isArray(data.stores[s])) data.stores[s] = {};
+                if (typeof data.stores[s] !== 'object' || Array.isArray(data.stores[s])) {
+                    data.stores[s] = {};
+                }
             });
-            saveData();
         }
 
-        function saveData() { 
-            localStorage.setItem('groceryStoresData', JSON.stringify(data)); 
-            // Auto-sync to cloud after saving
-            if (cloudEnabled) {
-                scheduleCloudSync();
-            }
+        function saveLocalOnly() {
+            localStorage.setItem('groceryStoresData', JSON.stringify(data));
+        }
+
+        // This is called by every add/delete/strike action.
+        // It saves locally first, then automatically saves to Google Drive.
+        function saveData() {
+            saveLocalOnly();
+            scheduleAutoSave();
+        }
+
+        function scheduleAutoSave() {
+            clearTimeout(saveTimer);
+            updateCloudStatus('saving', '☁ Saving...');
+
+            // Small debounce: many quick clicks become one Drive write.
+            saveTimer = setTimeout(() => {
+                syncToCloud();
+            }, 700);
         }
 
         function getCategoryStats(items) {
@@ -210,121 +240,60 @@
             return { remaining, finished };
         }
 
-        // ----- TEST CLOUD CONNECTION -----
-        async function testCloudConnection() {
-            try {
-                const response = await fetch(BACKUP_URL, {
-                    method: 'GET',
-                    headers: { 'Accept': 'application/json' }
-                });
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}`);
-                }
-                
-                const text = await response.text();
-                // Try to parse as JSON
-                try {
-                    JSON.parse(text);
-                    cloudEnabled = true;
-                    updateCloudStatus('idle', '☁️ Cloud connected');
-                    return true;
-                } catch (e) {
-                    // If it's not JSON but starts with "Grocery", it's the HTML response
-                    if (text.startsWith('Grocery') || text.includes('<html')) {
-                        cloudEnabled = false;
-                        updateCloudStatus('offline', '⚠️ Cloud not configured - check URL');
-                        return false;
-                    }
-                    cloudEnabled = false;
-                    updateCloudStatus('offline', '⚠️ Invalid cloud response');
-                    return false;
-                }
-            } catch (error) {
-                cloudEnabled = false;
-                updateCloudStatus('offline', '⚠️ Cloud unavailable');
-                return false;
-            }
-        }
-
-        // ----- CLOUD SYNC -----
-
-        let isSyncing = false;
-
+        // ----- CLOUD AUTO SAVE -----
         async function syncToCloud() {
-        
-            if (isSyncing) return;
+            if (!BACKUP_URL || BACKUP_URL.includes('YOUR_SCRIPT_ID')) {
+                updateCloudStatus('offline', '⚠ Set BACKUP_URL');
+                return;
+            }
+
+            if (isSyncing) {
+                pendingSync = true;
+                return;
+            }
+
             isSyncing = true;
-        
-            updateCloudStatus("saving", "Saving...");
-        
+            pendingSync = false;
+            updateCloudStatus('saving', '☁ Saving to Drive...');
+
             try {
-        
                 const response = await fetch(BACKUP_URL, {
-                    method: "POST",
+                    method: 'POST',
                     headers: {
-                        "Content-Type": "text/plain;charset=utf-8"
+                        // text/plain avoids the browser CORS preflight problem with Apps Script.
+                        'Content-Type': 'text/plain;charset=utf-8'
                     },
                     body: JSON.stringify({
+                        action: 'save',
+                        store: window._currentStore || 'all-stores',
                         content: data
                     })
                 });
-        
-                const result = await response.json();
-        
-                if(result.success){
-        
-                    updateCloudStatus(
-                        "idle",
-                        "Saved ✓ " + new Date().toLocaleTimeString()
-                    );
-        
-                }else{
-        
-                    updateCloudStatus(
-                        "error",
-                        result.message
-                    );
-        
-                }
-        
-            } catch(err){
-        
-                console.log(err);
-        
-                updateCloudStatus(
-                    "error",
-                    "Offline"
-                );
-        
-            }
-        
-            isSyncing = false;
-        
-        }
 
-                // Check if response is JSON
-                const contentType = response.headers.get('content-type');
-                if (!contentType || !contentType.includes('application/json')) {
-                    const text = await response.text();
-                    if (text.startsWith('Grocery') || text.includes('<html')) {
-                        throw new Error('Invalid response - check Google Apps Script deployment');
-                    }
-                    throw new Error('Server returned non-JSON response');
+                const text = await response.text();
+                let result;
+
+                try {
+                    result = JSON.parse(text);
+                } catch (e) {
+                    throw new Error('Apps Script did not return JSON. Check deployment URL and access setting.');
                 }
 
-                const result = await response.json();
-                
                 if (result.success) {
-                    updateCloudStatus('idle', `☁️ Synced at ${new Date().toLocaleTimeString()}`);
+                    updateCloudStatus('idle', '☁ Saved ' + new Date().toLocaleTimeString());
                 } else {
-                    updateCloudStatus('error', `⚠️ ${result.message || 'Sync failed'}`);
+                    updateCloudStatus('error', '⚠ ' + (result.message || 'Save failed'));
                 }
             } catch (error) {
-                console.error('Sync error:', error);
-                updateCloudStatus('error', `⚠️ ${error.message || 'Sync error'}`);
+                console.error('Cloud save error:', error);
+                updateCloudStatus('error', '⚠ Not saved online');
             } finally {
                 isSyncing = false;
+
+                // If user changed something while upload was running, upload latest data again.
+                if (pendingSync) {
+                    syncToCloud();
+                }
             }
         }
 
@@ -332,7 +301,7 @@
             const dot = document.getElementById('cloudStatusDot');
             const text = document.getElementById('cloudStatusText');
             if (!dot || !text) return;
-            
+
             dot.className = 'status-dot';
             if (state === 'saving') {
                 dot.classList.add('saving');
@@ -344,153 +313,70 @@
             text.textContent = message;
         }
 
-        async function manualSync() {
-            const btn = document.getElementById('syncBtn');
-            btn.disabled = true;
-            btn.textContent = '⏳';
-            
-            // Test connection first
-            await testCloudConnection();
-            
-            if (cloudEnabled) {
-                updateCloudStatus('saving', '☁️ Syncing now...');
-                await syncToCloud();
-            }
-            
-            btn.disabled = false;
-            btn.textContent = 'Sync now';
-        }
-
-        // ----- LOAD FROM CLOUD -----
+        // ----- RESTORE LATEST BACKUP FROM DRIVE -----
         async function loadFromCloud() {
             const btn = document.getElementById('restoreBtn');
-            btn.disabled = true;
-            btn.textContent = '⏳';
-            
+            if (btn) {
+                btn.disabled = true;
+                btn.textContent = '⏳';
+            }
+
             try {
-                // Test connection first
-                await testCloudConnection();
-                
-                if (!cloudEnabled) {
-                    alert('⚠️ Cloud is not available. Please check your BACKUP_URL configuration.');
-                    btn.disabled = false;
-                    btn.textContent = 'Restore';
+                updateCloudStatus('saving', '📥 Loading from Drive...');
+
+                const response = await fetch(BACKUP_URL, { method: 'GET' });
+                const text = await response.text();
+                let result;
+
+                try {
+                    result = JSON.parse(text);
+                } catch (e) {
+                    throw new Error('Apps Script did not return JSON.');
+                }
+
+                if (!result.success) {
+                    alert('No backup found: ' + (result.message || 'Unknown error'));
+                    updateCloudStatus('error', '⚠ Restore failed');
                     return;
                 }
 
-                const storeName = window._currentStore || 'all-stores';
-                updateCloudStatus('saving', '📥 Loading backup list...');
+                const loadedData = result.content || result.data;
 
-                // Get list of available backups
-                const listResponse = await fetch(`${BACKUP_URL}?action=list&store=${storeName}`, {
-                    method: 'GET'
-                });
-                
-                const listResult = await listResponse.json();
-                
-                if (!listResult.success) {
-                    alert('❌ Could not fetch backups: ' + (listResult.message || 'Unknown error'));
-                    updateCloudStatus('error', '⚠️ Failed to load list');
-                    btn.disabled = false;
-                    btn.textContent = 'Restore';
+                if (!loadedData || !loadedData.stores) {
+                    alert('Backup file exists, but it does not contain valid grocery data.');
+                    updateCloudStatus('error', '⚠ Invalid backup');
                     return;
                 }
-                
-                const backups = listResult.backups || [];
-                if (backups.length === 0) {
-                    alert('📭 No backups found for this store.');
-                    updateCloudStatus('idle', '☁️ No backups found');
-                    btn.disabled = false;
-                    btn.textContent = 'Restore';
+
+                if (!confirm('Replace this browser data with the latest Google Drive backup?')) {
+                    updateCloudStatus('idle', '☁ Restore cancelled');
                     return;
                 }
-                
-                // Show backup selection dialog
-                let backupOptions = backups.slice(0, 10).map((b, i) => {
-                    const date = new Date(b.date).toLocaleString();
-                    return `${i+1}. ${b.name} (${date})`;
-                }).join('\n');
-                
-                if (backups.length > 10) {
-                    backupOptions += `\n... and ${backups.length - 10} more.`;
-                }
-                
-                const choice = prompt(
-                    `Available backups for "${storeName}":\n\n${backupOptions}\n\nEnter the number of the backup to load (1-${Math.min(backups.length, 10)}), or 0 for latest:`,
-                    '0'
-                );
-                
-                if (choice === null) {
-                    updateCloudStatus('idle', '☁️ Restore cancelled');
-                    btn.disabled = false;
-                    btn.textContent = 'Restore';
-                    return;
-                }
-                
-                let selectedBackup;
-                if (choice === '0') {
-                    selectedBackup = backups[0];
+
+                data = loadedData;
+                saveLocalOnly();
+
+                if (window._currentStore && !data.stores[window._currentStore]) {
+                    goHome();
+                } else if (window._currentStore) {
+                    renderStoreDetail(window._currentStore);
                 } else {
-                    const index = parseInt(choice) - 1;
-                    if (isNaN(index) || index < 0 || index >= backups.length) {
-                        alert('❌ Invalid selection.');
-                        updateCloudStatus('idle', '☁️ Invalid selection');
-                        btn.disabled = false;
-                        btn.textContent = 'Restore';
-                        return;
-                    }
-                    selectedBackup = backups[index];
+                    renderHome();
                 }
-                
-                updateCloudStatus('saving', '📥 Loading backup...');
-                
-                // Load the selected backup
-                const loadResponse = await fetch(BACKUP_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        action: 'load',
-                        store: storeName,
-                        fileName: selectedBackup.name
-                    })
-                });
-                
-                const loadResult = await loadResponse.json();
-                
-                if (!loadResult.success) {
-                    alert('❌ Load failed: ' + loadResult.message);
-                    updateCloudStatus('error', '⚠️ Load failed');
-                    btn.disabled = false;
-                    btn.textContent = 'Restore';
-                    return;
-                }
-                
-                // Confirm before overwriting
-                if (confirm(`⚠️ This will replace all current data for "${storeName}" with the backup from ${new Date(loadResult.date).toLocaleString()}. Continue?`)) {
-                    const loadedData = loadResult.content;
-                    
-                    if (loadedData.stores) {
-                        localStorage.setItem('groceryStoresData', JSON.stringify(loadedData));
-                    }
-                    
-                    alert('✅ Data loaded successfully! Refreshing...');
-                    updateCloudStatus('idle', '☁️ Restored successfully');
-                    setTimeout(() => location.reload(), 500);
-                } else {
-                    updateCloudStatus('idle', '☁️ Restore cancelled');
-                }
+
+                updateCloudStatus('idle', '☁ Restored from Drive');
             } catch (error) {
-                console.error('Load error:', error);
-                alert('❌ Failed to load: ' + error.message);
-                updateCloudStatus('error', '⚠️ Load error');
+                console.error('Restore error:', error);
+                alert('Restore failed: ' + error.message);
+                updateCloudStatus('error', '⚠ Restore failed');
             } finally {
-                btn.disabled = false;
-                btn.textContent = 'Restore';
+                if (btn) {
+                    btn.disabled = false;
+                    btn.textContent = 'Restore';
+                }
             }
         }
 
-        // Make functions globally accessible
-        window.manualSync = manualSync;
         window.loadFromCloud = loadFromCloud;
 
         // ----- RENDER HOME -----
@@ -524,8 +410,6 @@
             window._currentStore = storeName;
             activeCategoryKey = null;
             renderStoreDetail(storeName);
-            // Test cloud connection when opening a store
-            testCloudConnection();
         }
 
         function goHome() {
@@ -534,7 +418,6 @@
             renderHome();
             window._currentStore = null;
             activeCategoryKey = null;
-            if (syncTimeout) clearTimeout(syncTimeout);
         }
 
         // ----- RENDER DETAIL -----
@@ -737,13 +620,12 @@
             if (item) { item.struck = !item.struck; saveData(); renderStoreDetail(store); }
         }
 
+
         // ----- INIT -----
-        async function init() {
+        function init() {
             loadData();
             renderHome();
-            
-            // Test cloud connection on load
-            await testCloudConnection();
+            updateCloudStatus('idle', '☁ Auto-save ready');
 
             document.getElementById('addStoreBtn').addEventListener('click', addStore);
             document.getElementById('storeInput').addEventListener('keypress', e => { if (e.key === 'Enter') addStore(); });
@@ -753,6 +635,7 @@
 
             window._currentStore = null;
         }
+
         init();
     })();
 </script>
