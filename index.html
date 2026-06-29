@@ -79,8 +79,29 @@
         .empty-state { color: #94a3b8; text-align: center; padding: 30px 0; font-size: 0.95rem; }
         .category-container { display: flex; flex-direction: column; }
         .mt-2 { margin-top: 6px; }
-        .item-list-wrapper { display: none; } /* all closed by default */
+        .item-list-wrapper { display: none; }
         .item-list-wrapper.open { display: block; }
+
+        /* Cloud buttons */
+        .cloud-bar {
+            display: flex; gap: 8px; margin-top: 20px; padding: 12px; 
+            background: #f8fafc; border-radius: 16px; flex-wrap: wrap;
+        }
+        .cloud-bar button {
+            flex: 1; min-width: 80px; color: white; border: none; 
+            padding: 10px 16px; border-radius: 40px; font-weight: 600; 
+            cursor: pointer; font-size: 0.9rem; transition: 0.15s;
+        }
+        .cloud-bar button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .cloud-bar .save-btn { background: #059669; }
+        .cloud-bar .save-btn:hover:not(:disabled) { background: #047857; }
+        .cloud-bar .load-btn { background: #2563eb; }
+        .cloud-bar .load-btn:hover:not(:disabled) { background: #1d4ed8; }
+        .cloud-bar .list-btn { flex: 0.5; min-width: 60px; background: #6b7280; }
+        .cloud-bar .list-btn:hover:not(:disabled) { background: #4b5563; }
     </style>
 </head>
 <body>
@@ -116,17 +137,28 @@
         </div>
 
         <div id="categoryContainer" class="category-container"></div>
-        <div style="height: 20px;"></div>
+        
+        <!-- Cloud Backup Bar -->
+        <div class="cloud-bar">
+            <button class="save-btn" id="saveCloudBtn" onclick="saveToCloud()">☁️ Save</button>
+            <button class="load-btn" id="loadCloudBtn" onclick="loadFromCloud()">📥 Load</button>
+            <button class="list-btn" onclick="listCloudBackups()" title="List backups">📋</button>
+        </div>
+        <div style="height: 10px;"></div>
     </div>
 </div>
+
 <script>
     (function() {
-        // ----- data -----
+        // ----- DATA LAYER -----
         let data = { stores: {} };
-        // track which category is currently open (only one at a time)
-        let activeCategoryKey = null; // format: "store||cat"
+        let activeCategoryKey = null;
 
-        // ----- helpers -----
+        // ----- CLOUD CONFIG -----
+        // REPLACE THIS WITH YOUR DEPLOYED WEB APP URL
+        const BACKUP_URL = 'https://script.google.com/macros/s/AKfycbztGveyW0tAkjZhhzk-egAHoMwBvm3Zd_7g7M5KsOG6J2iHcJ8eRcMNDxypvoYLx3I/exec';
+
+        // ----- HELPERS -----
         function loadData() {
             const stored = localStorage.getItem('groceryStoresData');
             if (stored) {
@@ -143,9 +175,11 @@
             });
             saveData();
         }
-        function saveData() { localStorage.setItem('groceryStoresData', JSON.stringify(data)); }
 
-        // ----- stats: remaining (R) and finished (F) -----
+        function saveData() { 
+            localStorage.setItem('groceryStoresData', JSON.stringify(data)); 
+        }
+
         function getCategoryStats(items) {
             if (!items || !items.length) return { remaining: 0, finished: 0 };
             let finished = 0, remaining = 0;
@@ -153,12 +187,15 @@
             return { remaining, finished };
         }
 
-        // ----- render home -----
+        // ----- RENDER HOME -----
         function renderHome() {
             const container = document.getElementById('storeList');
             container.innerHTML = '';
             const names = Object.keys(data.stores);
-            if (!names.length) { container.innerHTML = `<div class="empty-state">✨ No stores yet.</div>`; return; }
+            if (!names.length) { 
+                container.innerHTML = `<div class="empty-state">✨ No stores yet.</div>`; 
+                return; 
+            }
             names.sort().forEach(name => {
                 const tile = document.createElement('div');
                 tile.className = 'store-tile';
@@ -173,13 +210,13 @@
             });
         }
 
-        // ----- open store detail -----
+        // ----- OPEN STORE -----
         function openStore(storeName) {
             document.getElementById('homeView').classList.add('hidden');
             document.getElementById('detailView').classList.remove('hidden');
             document.getElementById('detailStoreTitle').textContent = storeName;
             window._currentStore = storeName;
-            activeCategoryKey = null; // reset active when entering store
+            activeCategoryKey = null;
             renderStoreDetail(storeName);
         }
 
@@ -191,7 +228,7 @@
             activeCategoryKey = null;
         }
 
-        // ----- render detail with sorting & stats -----
+        // ----- RENDER DETAIL -----
         function renderStoreDetail(storeName) {
             const container = document.getElementById('categoryContainer');
             container.innerHTML = '';
@@ -204,14 +241,12 @@
                 return;
             }
 
-            // build array with stats
             const catStats = catNames.map(cat => {
                 const items = categories[cat] || [];
                 const stats = getCategoryStats(items);
                 return { name: cat, items, remaining: stats.remaining, finished: stats.finished };
             });
 
-            // sort: high remaining first, then by name
             catStats.sort((a, b) => {
                 if (a.remaining !== b.remaining) return b.remaining - a.remaining;
                 return a.name.localeCompare(b.name);
@@ -223,7 +258,6 @@
                 card.className = `category-card${isDone ? ' done' : ''}`;
                 card.dataset.category = cat;
 
-                // header
                 const head = document.createElement('div');
                 head.className = 'category-head';
                 head.innerHTML = `
@@ -235,15 +269,12 @@
                 `;
                 card.appendChild(head);
 
-                // item list wrapper - all closed by default
                 const listWrapper = document.createElement('div');
                 listWrapper.className = 'item-list-wrapper';
                 const key = `${storeName}||${cat}`;
-                // only open if this is the active category
                 if (activeCategoryKey === key) {
                     listWrapper.classList.add('open');
                 }
-                // if no active category, keep closed
 
                 const ul = document.createElement('ul');
                 ul.className = 'item-list';
@@ -267,7 +298,6 @@
                 });
                 listWrapper.appendChild(ul);
 
-                // add item row
                 const addRow = document.createElement('div');
                 addRow.className = 'add-item-row';
                 addRow.innerHTML = `<input type="text" placeholder="Add item …" class="item-input" data-store="${storeName}" data-cat="${cat}" />
@@ -276,19 +306,16 @@
 
                 card.appendChild(listWrapper);
 
-                // toggle list visibility on header click
                 head.addEventListener('click', (e) => {
                     if (e.target.closest('button')) return;
                     const wrapper = card.querySelector('.item-list-wrapper');
                     if (!wrapper) return;
                     
                     const key = `${storeName}||${cat}`;
-                    // if this category is already active, close it (toggle off)
                     if (activeCategoryKey === key) {
                         wrapper.classList.remove('open');
                         activeCategoryKey = null;
                     } else {
-                        // close all others, open this one
                         document.querySelectorAll('.item-list-wrapper').forEach(w => w.classList.remove('open'));
                         wrapper.classList.add('open');
                         activeCategoryKey = key;
@@ -298,7 +325,7 @@
                 container.appendChild(card);
             });
 
-            // attach delete category events
+            // Attach events
             document.querySelectorAll('.del-cat').forEach(btn => {
                 btn.addEventListener('click', function(e) {
                     e.stopPropagation();
@@ -308,7 +335,6 @@
                 });
             });
 
-            // attach add item events
             document.querySelectorAll('.add-item-btn').forEach(btn => {
                 btn.addEventListener('click', function() {
                     const store = this.dataset.store;
@@ -328,7 +354,7 @@
             });
         }
 
-        // ----- actions -----
+        // ----- ACTIONS -----
         function addStore() {
             const input = document.getElementById('storeInput');
             const name = input.value.trim();
@@ -358,7 +384,6 @@
             if (data.stores[store][cat]) { alert('Category exists.'); return; }
             data.stores[store][cat] = [];
             saveData();
-            // newly added category becomes active
             activeCategoryKey = `${store}||${cat}`;
             renderStoreDetail(store);
             input.value = '';
@@ -382,7 +407,6 @@
             name = name.charAt(0).toUpperCase() + name.slice(1);
             data.stores[store][cat].push({ name, struck: false });
             saveData();
-            // keep this category active after adding
             activeCategoryKey = `${store}||${cat}`;
             renderStoreDetail(store);
         }
@@ -394,7 +418,6 @@
                 if (confirm(`Category "${cat}" is empty. Remove it?`)) { deleteCategory(store, cat); return; }
             }
             saveData();
-            // keep this category active after deletion
             activeCategoryKey = `${store}||${cat}`;
             renderStoreDetail(store);
         }
@@ -405,7 +428,203 @@
             if (item) { item.struck = !item.struck; saveData(); renderStoreDetail(store); }
         }
 
-        // ----- init -----
+        // ----- CLOUD FUNCTIONS -----
+        async function saveToCloud() {
+            const saveBtn = document.getElementById('saveCloudBtn');
+            try {
+                const data = localStorage.getItem('groceryStoresData');
+                if (!data) {
+                    alert('⚠️ No data to save!');
+                    return;
+                }
+                
+                const storeName = window._currentStore || 'all-stores';
+                
+                if (saveBtn) {
+                    saveBtn.textContent = '⏳ Saving...';
+                    saveBtn.disabled = true;
+                }
+                
+                const response = await fetch(BACKUP_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'save',
+                        store: storeName,
+                        content: JSON.parse(data)
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert(`✅ Data saved to Google Drive!\n\nFile: ${result.fileName}`);
+                } else {
+                    alert(`❌ Save failed: ${result.message}`);
+                }
+            } catch (error) {
+                console.error('Save error:', error);
+                alert('❌ Failed to save: ' + error.message);
+            } finally {
+                if (saveBtn) {
+                    saveBtn.textContent = '☁️ Save';
+                    saveBtn.disabled = false;
+                }
+            }
+        }
+
+        async function loadFromCloud() {
+            const loadBtn = document.getElementById('loadCloudBtn');
+            try {
+                const storeName = window._currentStore || 'all-stores';
+                
+                if (loadBtn) {
+                    loadBtn.textContent = '⏳ Loading...';
+                    loadBtn.disabled = true;
+                }
+                
+                // First, get list of available backups
+                const listResponse = await fetch(`${BACKUP_URL}?action=list&store=${storeName}`, {
+                    method: 'GET'
+                });
+                const listResult = await listResponse.json();
+                
+                if (!listResult.success) {
+                    alert('❌ Could not fetch backups: ' + listResult.message);
+                    return;
+                }
+                
+                const backups = listResult.backups || [];
+                if (backups.length === 0) {
+                    alert('📭 No backups found for this store.');
+                    return;
+                }
+                
+                // Show backup selection dialog
+                let backupOptions = backups.slice(0, 10).map((b, i) => {
+                    const date = new Date(b.date).toLocaleString();
+                    return `${i+1}. ${b.name} (${date})`;
+                }).join('\n');
+                
+                if (backups.length > 10) {
+                    backupOptions += `\n... and ${backups.length - 10} more.`;
+                }
+                
+                const choice = prompt(
+                    `Available backups for "${storeName}":\n\n${backupOptions}\n\nEnter the number of the backup to load (1-${Math.min(backups.length, 10)}), or 0 for latest:`,
+                    '0'
+                );
+                
+                if (choice === null) return;
+                
+                let selectedBackup;
+                if (choice === '0') {
+                    selectedBackup = backups[0];
+                } else {
+                    const index = parseInt(choice) - 1;
+                    if (isNaN(index) || index < 0 || index >= backups.length) {
+                        alert('❌ Invalid selection.');
+                        return;
+                    }
+                    selectedBackup = backups[index];
+                }
+                
+                // Load the selected backup
+                const loadResponse = await fetch(BACKUP_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'load',
+                        store: storeName,
+                        fileName: selectedBackup.name
+                    })
+                });
+                
+                const loadResult = await loadResponse.json();
+                
+                if (!loadResult.success) {
+                    alert('❌ Load failed: ' + loadResult.message);
+                    return;
+                }
+                
+                // Confirm before overwriting
+                if (confirm(`⚠️ This will replace all current data for "${storeName}" with the backup from ${new Date(loadResult.date).toLocaleString()}. Continue?`)) {
+                    const currentData = JSON.parse(localStorage.getItem('groceryStoresData') || '{"stores":{}}');
+                    const loadedData = loadResult.content;
+                    
+                    // Merge or replace?
+                    if (confirm('Replace completely or merge? (OK = Replace, Cancel = Merge)')) {
+                        localStorage.setItem('groceryStoresData', JSON.stringify(loadedData));
+                    } else {
+                        if (loadedData.stores) {
+                            if (!currentData.stores) currentData.stores = {};
+                            Object.keys(loadedData.stores).forEach(store => {
+                                currentData.stores[store] = loadedData.stores[store];
+                            });
+                            localStorage.setItem('groceryStoresData', JSON.stringify(currentData));
+                        }
+                    }
+                    
+                    alert('✅ Data loaded successfully! Refreshing...');
+                    location.reload();
+                }
+            } catch (error) {
+                console.error('Load error:', error);
+                alert('❌ Failed to load: ' + error.message);
+            } finally {
+                if (loadBtn) {
+                    loadBtn.textContent = '📥 Load';
+                    loadBtn.disabled = false;
+                }
+            }
+        }
+
+        async function listCloudBackups() {
+            try {
+                const storeName = window._currentStore || 'all-stores';
+                const response = await fetch(`${BACKUP_URL}?action=list&store=${storeName}`, {
+                    method: 'GET'
+                });
+                const result = await response.json();
+                
+                if (!result.success) {
+                    alert('❌ ' + result.message);
+                    return;
+                }
+                
+                const backups = result.backups || [];
+                if (backups.length === 0) {
+                    alert('📭 No backups found.');
+                    return;
+                }
+                
+                let message = `📁 ${backups.length} backups found for "${storeName}":\n\n`;
+                backups.slice(0, 10).forEach((b, i) => {
+                    const date = new Date(b.date).toLocaleString();
+                    const size = Math.round(b.size/1024);
+                    message += `${i+1}. ${b.name}\n   📅 ${date} (${size}KB)\n`;
+                });
+                if (backups.length > 10) {
+                    message += `\n... and ${backups.length - 10} more.`;
+                }
+                
+                alert(message);
+            } catch (error) {
+                console.error('List error:', error);
+                alert('❌ Failed to list backups: ' + error.message);
+            }
+        }
+
+        // Make cloud functions globally accessible
+        window.saveToCloud = saveToCloud;
+        window.loadFromCloud = loadFromCloud;
+        window.listCloudBackups = listCloudBackups;
+
+        // ----- INIT -----
         function init() {
             loadData();
             renderHome();
