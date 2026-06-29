@@ -595,20 +595,36 @@
 
 
         // ----- INIT -----
-        function init() {
+        async function init() {
+        
+            // Load local data first (works offline)
             loadData();
             renderHome();
+        
+            // Then try to get the newest version from Google Drive
+            try {
+                await loadFromCloud();
+            } catch (e) {
+                console.log("Could not load from cloud:", e);
+            }
+        
             updateCloudStatus('idle', '☁ Auto-save ready');
-
+        
             document.getElementById('addStoreBtn').addEventListener('click', addStore);
-            document.getElementById('storeInput').addEventListener('keypress', e => { if (e.key === 'Enter') addStore(); });
+            document.getElementById('storeInput').addEventListener('keypress', e => {
+                if (e.key === 'Enter') addStore();
+            });
+        
             document.getElementById('addCategoryBtn').addEventListener('click', addCategoryFromDetail);
-            document.getElementById('categoryInput').addEventListener('keypress', e => { if (e.key === 'Enter') addCategoryFromDetail(); });
+            document.getElementById('categoryInput').addEventListener('keypress', e => {
+                if (e.key === 'Enter') addCategoryFromDetail();
+            });
+        
             document.getElementById('backHomeBtn').addEventListener('click', goHome);
-
+        
             window._currentStore = null;
         }
-
+        
         init();
     })();
 </script>
