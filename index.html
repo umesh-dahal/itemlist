@@ -167,6 +167,16 @@
         // REPLACE THIS WITH YOUR DEPLOYED WEB APP URL
         const BACKUP_URL = 'https://script.google.com/macros/s/AKfycbw3KZrmoaFJimocuwOUt_fgi5kjGeqNWV_HWrwIx07muiWtLUB6XHU0uHz6rVL7WiJM/exec';
 
+        const response = await fetch(BACKUP_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({
+            action: 'save',
+            store: storeName,
+            content: JSON.parse(dataStr)
+          })
+        });
+        
         // ----- HELPERS -----
         function loadData() {
             const stored = localStorage.getItem('groceryStoresData');
