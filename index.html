@@ -44,7 +44,7 @@
             opacity: 0.6;
             background: #fafbfc;
             border-color: #dce2ec;
-            order: 999; /* fallback, but we sort in JS */
+            order: 999;
         }
         .category-card.done .category-head {
             text-decoration: line-through;
@@ -79,8 +79,8 @@
         .empty-state { color: #94a3b8; text-align: center; padding: 30px 0; font-size: 0.95rem; }
         .category-container { display: flex; flex-direction: column; }
         .mt-2 { margin-top: 6px; }
-        /* expanded state */
-        .item-list-wrapper { display: block; }
+        .item-list-wrapper { display: none; } /* all closed by default */
+        .item-list-wrapper.open { display: block; }
     </style>
 </head>
 <body>
@@ -123,8 +123,8 @@
     (function() {
         // ----- data -----
         let data = { stores: {} };
-        // track which categories are expanded (by store+cat key)
-        const expandedMap = new Map();
+        // track which category is currently open (only one at a time)
+        let activeCategoryKey = null; // format: "store||cat"
 
         // ----- helpers -----
         function loadData() {
@@ -179,6 +179,7 @@
             document.getElementById('detailView').classList.remove('hidden');
             document.getElementById('detailStoreTitle').textContent = storeName;
             window._currentStore = storeName;
+            activeCategoryKey = null; // reset active when entering store
             renderStoreDetail(storeName);
         }
 
@@ -187,7 +188,7 @@
             document.getElementById('homeView').classList.remove('hidden');
             renderHome();
             window._currentStore = null;
-            expandedMap.clear(); // clear expansion state on home
+            activeCategoryKey = null;
         }
 
         // ----- render detail with sorting & stats -----
@@ -234,13 +235,15 @@
                 `;
                 card.appendChild(head);
 
-                // item list wrapper
+                // item list wrapper - all closed by default
                 const listWrapper = document.createElement('div');
                 listWrapper.className = 'item-list-wrapper';
-                // check expansion state: default to expanded if no state, or if it was expanded before
                 const key = `${storeName}||${cat}`;
-                const isExpanded = expandedMap.has(key) ? expandedMap.get(key) : true; // default open
-                listWrapper.style.display = isExpanded ? 'block' : 'none';
+                // only open if this is the active category
+                if (activeCategoryKey === key) {
+                    listWrapper.classList.add('open');
+                }
+                // if no active category, keep closed
 
                 const ul = document.createElement('ul');
                 ul.className = 'item-list';
@@ -273,16 +276,23 @@
 
                 card.appendChild(listWrapper);
 
-                // toggle list visibility on header click — store state
+                // toggle list visibility on header click
                 head.addEventListener('click', (e) => {
                     if (e.target.closest('button')) return;
                     const wrapper = card.querySelector('.item-list-wrapper');
                     if (!wrapper) return;
-                    const isNowVisible = wrapper.style.display !== 'none';
-                    wrapper.style.display = isNowVisible ? 'none' : 'block';
-                    // update map
+                    
                     const key = `${storeName}||${cat}`;
-                    expandedMap.set(key, !isNowVisible);
+                    // if this category is already active, close it (toggle off)
+                    if (activeCategoryKey === key) {
+                        wrapper.classList.remove('open');
+                        activeCategoryKey = null;
+                    } else {
+                        // close all others, open this one
+                        document.querySelectorAll('.item-list-wrapper').forEach(w => w.classList.remove('open'));
+                        wrapper.classList.add('open');
+                        activeCategoryKey = key;
+                    }
                 });
 
                 container.appendChild(card);
@@ -348,6 +358,8 @@
             if (data.stores[store][cat]) { alert('Category exists.'); return; }
             data.stores[store][cat] = [];
             saveData();
+            // newly added category becomes active
+            activeCategoryKey = `${store}||${cat}`;
             renderStoreDetail(store);
             input.value = '';
         }
@@ -358,6 +370,7 @@
             if (!Object.keys(data.stores[store]).length) {
                 if (confirm(`"${store}" is empty. Remove store?`)) { deleteStore(store); return; }
             }
+            if (activeCategoryKey === `${store}||${cat}`) activeCategoryKey = null;
             saveData();
             renderStoreDetail(store);
         }
@@ -369,9 +382,8 @@
             name = name.charAt(0).toUpperCase() + name.slice(1);
             data.stores[store][cat].push({ name, struck: false });
             saveData();
-            // preserve expansion state: keep current category open after adding
-            const key = `${store}||${cat}`;
-            expandedMap.set(key, true); // ensure it stays open
+            // keep this category active after adding
+            activeCategoryKey = `${store}||${cat}`;
             renderStoreDetail(store);
         }
 
@@ -382,9 +394,8 @@
                 if (confirm(`Category "${cat}" is empty. Remove it?`)) { deleteCategory(store, cat); return; }
             }
             saveData();
-            // keep category open after item deletion
-            const key = `${store}||${cat}`;
-            expandedMap.set(key, true);
+            // keep this category active after deletion
+            activeCategoryKey = `${store}||${cat}`;
             renderStoreDetail(store);
         }
 
