@@ -1,288 +1,92 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Grocery Lists · Stores</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Grocery · Stores</title>
     <style>
-        * {
-            box-sizing: border-box;
-            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
-        }
-        body {
-            background: #f4f6fa;
-            margin: 0;
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            padding: 24px 16px;
-        }
+        * { box-sizing: border-box; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; }
+        body { background: #f4f6fa; margin: 0; min-height: 100vh; display: flex; justify-content: center; padding: 24px 16px; }
         .app {
-            max-width: 420px;
-            width: 100%;
-            background: white;
-            border-radius: 32px;
-            box-shadow: 0 12px 30px rgba(0,0,0,0.08);
-            padding: 24px 18px 36px;
-            transition: 0.2s;
+            max-width: 420px; width: 100%; background: white; border-radius: 32px;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.06); padding: 24px 18px 36px;
         }
-        h2 {
-            font-weight: 600;
-            font-size: 1.6rem;
-            margin: 0 0 6px 0;
-            color: #1e293b;
-            letter-spacing: -0.3px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .subhead {
-            color: #64748b;
-            font-size: 0.9rem;
-            margin-top: -4px;
-            margin-bottom: 20px;
-            border-bottom: 1px solid #e9edf2;
-            padding-bottom: 16px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .back-btn {
-            background: none;
-            border: none;
-            font-size: 1.3rem;
-            cursor: pointer;
-            color: #2563eb;
-            font-weight: 500;
-            padding: 0 6px;
-        }
-        .back-btn:hover {
-            color: #1d4ed8;
-        }
-        .card {
-            background: #ffffff;
-            border-radius: 20px;
-            padding: 16px 14px;
-            margin-bottom: 16px;
-            border: 1px solid #eef2f6;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.02);
-            transition: 0.15s;
-        }
-        .store-grid {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            margin-top: 6px;
-        }
+        h2 { font-weight: 600; font-size: 1.6rem; margin: 0 0 4px; color: #0b1e33; display: flex; align-items: center; gap: 6px; }
+        .subhead { color: #64748b; font-size: 0.9rem; margin-bottom: 18px; border-bottom: 1px solid #eef2f6; padding-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
+        .back-btn { background: none; border: none; font-size: 1.4rem; cursor: pointer; color: #2563eb; padding: 0 4px; }
+        .store-grid { display: flex; flex-direction: column; gap: 12px; margin-top: 6px; }
         .store-tile {
-            background: white;
-            border: 1px solid #e2e8f0;
-            border-radius: 60px;
-            padding: 14px 22px;
-            font-size: 1.2rem;
-            font-weight: 500;
-            color: #0b1e33;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            cursor: pointer;
-            transition: 0.15s;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+            background: white; border: 1px solid #e2e8f0; border-radius: 60px; padding: 14px 22px;
+            font-size: 1.2rem; font-weight: 500; color: #0b1e33;
+            display: flex; justify-content: space-between; align-items: center; cursor: pointer;
+            transition: 0.15s; box-shadow: 0 1px 3px rgba(0,0,0,0.02);
         }
-        .store-tile:hover {
-            background: #f8fafc;
-            border-color: #b9c7da;
-            transform: translateY(-1px);
-        }
-        .store-tile .badge {
-            background: #eef2f6;
-            padding: 4px 12px;
-            border-radius: 40px;
-            font-size: 0.75rem;
-            font-weight: 500;
-            color: #334155;
-        }
-        .input-row {
-            display: flex;
-            gap: 8px;
-            margin: 12px 0 6px;
-        }
-        .input-row input {
-            flex: 1;
-            padding: 12px 14px;
-            border: 1px solid #d1d9e6;
-            border-radius: 40px;
-            font-size: 0.95rem;
-            background: #fafcff;
-            outline: none;
+        .store-tile:hover { background: #f8fafc; border-color: #b9c7da; }
+        .badge { background: #eef2f6; padding: 4px 14px; border-radius: 40px; font-size: 0.75rem; font-weight: 500; color: #334155; }
+        .input-row { display: flex; gap: 8px; margin: 12px 0 10px; }
+        .input-row input { flex: 1; padding: 12px 14px; border: 1px solid #d1d9e6; border-radius: 40px; font-size: 0.95rem; background: #fafcff; outline: none; }
+        .input-row input:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.08); }
+        .btn { background: #2563eb; border: none; color: white; font-weight: 500; border-radius: 40px; padding: 0 18px; font-size: 1.2rem; cursor: pointer; height: 48px; display: inline-flex; align-items: center; justify-content: center; min-width: 50px; }
+        .btn-sm { height: 36px; min-width: 40px; padding: 0 14px; font-size: 0.9rem; }
+        .btn-outline { background: transparent; border: 1px solid #d1d9e6; color: #1e293b; }
+        .btn-danger { background: #ef4444; }
+        .btn-danger:hover { background: #dc2626; }
+        .hidden { display: none; }
+        .flex { display: flex; align-items: center; gap: 6px; }
+
+        /* category cards */
+        .category-card {
+            background: white; border-radius: 18px; padding: 12px 14px 14px;
+            margin-bottom: 12px; border: 1px solid #eef2f6; box-shadow: 0 2px 6px rgba(0,0,0,0.02);
             transition: 0.15s;
         }
-        .input-row input:focus {
-            border-color: #2563eb;
-            background: white;
-            box-shadow: 0 0 0 3px rgba(37,99,235,0.08);
+        .category-card.done {
+            opacity: 0.6;
+            background: #fafbfc;
+            border-color: #dce2ec;
+            order: 999; /* move to bottom via flex order, but we sort in JS */
         }
-        .btn {
-            background: #2563eb;
-            border: none;
-            color: white;
-            font-weight: 500;
-            border-radius: 40px;
-            padding: 0 18px;
-            font-size: 1.2rem;
-            cursor: pointer;
-            transition: 0.15s;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            min-width: 50px;
-            height: 48px;
-            line-height: 1;
-        }
-        .btn-outline {
-            background: transparent;
-            border: 1px solid #d1d9e6;
-            color: #1e293b;
-        }
-        .btn-outline:hover {
-            background: #f1f5f9;
-        }
-        .btn-danger {
-            background: #ef4444;
-        }
-        .btn-danger:hover {
-            background: #dc2626;
-        }
-        .btn-sm {
-            height: 36px;
-            min-width: 40px;
-            padding: 0 14px;
-            font-size: 0.9rem;
-        }
-        .category-block {
-            margin-top: 18px;
-            border-top: 1px solid #ecf1f7;
-            padding-top: 12px;
-        }
-        .category-head {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-weight: 600;
-            color: #0b1e33;
-            font-size: 1.1rem;
-            margin-bottom: 10px;
-            background: #f8fafc;
-            padding: 8px 14px;
-            border-radius: 40px;
-        }
-        .category-head button {
-            background: #eef2f6;
-            border: none;
-            border-radius: 30px;
-            width: 30px;
-            height: 30px;
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: #334155;
-            cursor: pointer;
-            transition: 0.1s;
-        }
-        .category-head button:hover {
-            background: #dce2ec;
-        }
-        .item-list {
-            list-style: none;
-            padding: 0;
-            margin: 6px 0 4px;
-        }
-        .item-list li {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 8px 12px 8px 6px;
-            border-bottom: 1px solid #f1f5f9;
-            font-size: 0.98rem;
-        }
-        .item-list li:last-child {
-            border-bottom: none;
-        }
-        .item-name {
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            flex: 1;
-            padding: 2px 0;
-        }
-        .item-name::before {
-            content: "•";
-            color: #64748b;
-            font-weight: bold;
-            font-size: 1.3rem;
-            margin-right: 4px;
-        }
-        .strikethrough {
+        .category-card.done .category-head {
             text-decoration: line-through;
             color: #94a3b8;
         }
-        .item-actions {
-            display: flex;
-            gap: 6px;
+        .category-head {
+            display: flex; justify-content: space-between; align-items: center;
+            font-weight: 600; color: #0b1e33; font-size: 1.05rem;
+            padding: 2px 0 4px; cursor: pointer;
         }
-        .item-actions button {
-            background: none;
-            border: none;
-            color: #94a3b8;
-            font-weight: 600;
-            cursor: pointer;
-            font-size: 0.9rem;
-            padding: 0 6px;
-            transition: 0.1s;
+        .category-head .cat-stats {
+            font-weight: 400; font-size: 0.8rem; background: #f1f5f9; padding: 2px 12px; border-radius: 30px;
+            color: #334155; letter-spacing: 0.2px;
         }
-        .item-actions .del-item {
-            color: #f87171;
+        .category-head .del-cat { background: none; border: none; color: #cbd5e1; font-size: 1.1rem; cursor: pointer; padding: 0 4px; }
+        .category-head .del-cat:hover { color: #ef4444; }
+        .item-list { list-style: none; padding: 0; margin: 6px 0 2px; }
+        .item-list li {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 5px 6px 5px 4px; border-bottom: 1px solid #f1f5f9; font-size: 0.95rem;
         }
-        .item-actions .del-item:hover {
-            color: #dc2626;
-        }
-        .add-item-row {
-            display: flex;
-            gap: 6px;
-            margin: 10px 0 4px;
-        }
-        .add-item-row input {
-            flex: 1;
-            padding: 8px 14px;
-            border: 1px solid #d1d9e6;
-            border-radius: 40px;
-            font-size: 0.9rem;
-            background: #fafcff;
-        }
-        .add-item-row input:focus {
-            border-color: #2563eb;
-            outline: none;
-        }
-        .empty-state {
-            color: #94a3b8;
-            text-align: center;
-            padding: 24px 0 10px;
-            font-size: 0.95rem;
-        }
+        .item-list li:last-child { border-bottom: none; }
+        .item-name { cursor: pointer; display: flex; align-items: center; gap: 4px; flex: 1; }
+        .item-name::before { content: "•"; color: #94a3b8; font-weight: bold; margin-right: 4px; }
+        .strikethrough { text-decoration: line-through; color: #94a3b8; }
+        .item-actions button { background: none; border: none; color: #94a3b8; font-weight: 600; cursor: pointer; padding: 0 6px; }
+        .item-actions .del-item { color: #f87171; }
+        .item-actions .del-item:hover { color: #dc2626; }
+        .add-item-row { display: flex; gap: 6px; margin: 10px 0 2px; }
+        .add-item-row input { flex: 1; padding: 8px 14px; border: 1px solid #d1d9e6; border-radius: 40px; font-size: 0.9rem; background: #fafcff; }
+        .add-item-row input:focus { border-color: #2563eb; outline: none; }
+        .empty-state { color: #94a3b8; text-align: center; padding: 30px 0; font-size: 0.95rem; }
+        .category-container { display: flex; flex-direction: column; }
         .mt-2 { margin-top: 6px; }
-        .flex { display: flex; align-items: center; gap: 6px; }
-        .hidden { display: none; }
     </style>
 </head>
 <body>
 <div class="app" id="app">
-    <!-- home / detail dynamic -->
+    <!-- HOME -->
     <div id="homeView">
         <h2>🛒 Stores</h2>
-        <div class="subhead">
-            <span>your grocery hubs</span>
-            <span style="font-size:0.8rem; background:#eef2f6; padding:4px 14px; border-radius:40px;">tap to open</span>
-        </div>
+        <div class="subhead"><span>your grocery hubs</span><span style="font-size:0.75rem; background:#eef2f6; padding:4px 14px; border-radius:40px;">tap to open</span></div>
         <div class="input-row">
             <input type="text" id="storeInput" placeholder="Add store … Rewe, Rossmann" />
             <button class="btn" id="addStoreBtn">+</button>
@@ -290,122 +94,146 @@
         <div id="storeList" class="store-grid"></div>
     </div>
 
+    <!-- DETAIL -->
     <div id="detailView" class="hidden">
-        <div class="flex" style="margin-bottom: 6px;">
+        <div class="flex" style="margin-bottom: 2px;">
             <button class="back-btn" id="backHomeBtn">←</button>
             <h2 style="margin:0; font-size:1.5rem;" id="detailStoreTitle">Store</h2>
         </div>
-        <div class="subhead" style="padding-bottom: 8px; margin-bottom: 12px;">
-            <span>categories & items</span>
+        <div class="subhead" style="padding-bottom: 6px; margin-bottom: 12px;">
+            <span>categories · <span id="catCounter">0</span></span>
             <span style="font-size:0.75rem;">▼</span>
         </div>
 
         <!-- add category -->
-        <div class="card" style="padding: 14px;">
+        <div class="card" style="padding: 6px 0 12px;">
             <div class="input-row" style="margin:0;">
                 <input type="text" id="categoryInput" placeholder="New category …" />
                 <button class="btn btn-sm" id="addCategoryBtn">+</button>
             </div>
         </div>
 
-        <div id="categoryContainer"></div>
+        <div id="categoryContainer" class="category-container"></div>
         <div style="height: 20px;"></div>
     </div>
 </div>
 <script>
     (function() {
-        // ----- data layer -----
-        let data = {
-            stores: {}   // storeName: { categoryName: [ { name, struck } ] }
-        };
+        // ----- data -----
+        let data = { stores: {} };
 
         // ----- helpers -----
         function loadData() {
             const stored = localStorage.getItem('groceryStoresData');
             if (stored) {
-                try {
-                    data = JSON.parse(stored);
-                    // ensure structure
-                    if (!data.stores) data.stores = {};
-                } catch(e) { data.stores = {}; }
+                try { data = JSON.parse(stored); if (!data.stores) data.stores = {}; } 
+                catch(e) { data.stores = {}; }
             } else {
-                // default demo store
                 data.stores = {
-                    'Rewe': {
-                        'Fruits': [{ name: 'Apples', struck: false }, { name: 'Bananas', struck: false }],
-                        'Dairy': [{ name: 'Milk', struck: false }]
-                    },
-                    'Rossmann': {
-                        'Health': [{ name: 'Vitamin C', struck: false }],
-                        'Snacks': [{ name: 'Protein bar', struck: false }]
-                    }
+                    'Rewe': { 'Fruits': [{name:'Apples',struck:false},{name:'Bananas',struck:false},{name:'Oranges',struck:true}], 'Dairy': [{name:'Milk',struck:false},{name:'Yogurt',struck:true}] },
+                    'Rossmann': { 'Health': [{name:'Vitamin C',struck:false},{name:'Zinc',struck:true}], 'Snacks': [{name:'Protein bar',struck:false},{name:'Nuts',struck:false},{name:'Chips',struck:true}] }
                 };
             }
-            // ensure no undefined categories
-            Object.keys(data.stores).forEach(store => {
-                if (typeof data.stores[store] !== 'object' || Array.isArray(data.stores[store])) {
-                    data.stores[store] = {};
-                }
+            Object.keys(data.stores).forEach(s => {
+                if (typeof data.stores[s] !== 'object' || Array.isArray(data.stores[s])) data.stores[s] = {};
             });
             saveData();
         }
+        function saveData() { localStorage.setItem('groceryStoresData', JSON.stringify(data)); }
 
-        function saveData() {
-            localStorage.setItem('groceryStoresData', JSON.stringify(data));
+        // ----- stats: remaining (R) and finished (F) -----
+        function getCategoryStats(items) {
+            if (!items || !items.length) return { remaining: 0, finished: 0 };
+            let finished = 0, remaining = 0;
+            items.forEach(it => { if (it.struck) finished++; else remaining++; });
+            return { remaining, finished };
         }
 
-        // ----- rendering -----
+        // ----- render home -----
         function renderHome() {
             const container = document.getElementById('storeList');
             container.innerHTML = '';
-            const storeNames = Object.keys(data.stores);
-            if (storeNames.length === 0) {
-                container.innerHTML = `<div class="empty-state">✨ No stores yet. Add one above.</div>`;
-                return;
-            }
-            storeNames.sort();
-            storeNames.forEach(name => {
+            const names = Object.keys(data.stores);
+            if (!names.length) { container.innerHTML = `<div class="empty-state">✨ No stores yet.</div>`; return; }
+            names.sort().forEach(name => {
                 const tile = document.createElement('div');
                 tile.className = 'store-tile';
-                const categoryCount = Object.keys(data.stores[name] || {}).length;
-                tile.innerHTML = `<span>${name}</span><span class="badge">${categoryCount} categories</span>`;
-                tile.addEventListener('click', () => openStoreDetail(name));
+                const catCount = Object.keys(data.stores[name] || {}).length;
+                tile.innerHTML = `<span>${name}</span>
+                    <div class="flex"><span class="badge">${catCount}</span>
+                    <button class="btn btn-sm btn-outline" style="background:transparent;border:none;color:#94a3b8;padding:0 6px;font-size:1.2rem;" data-store="${name}">✕</button></div>`;
+                tile.addEventListener('click', (e) => { if (e.target.tagName === 'BUTTON') return; openStore(name); });
+                const del = tile.querySelector('button');
+                if (del) del.addEventListener('click', (e) => { e.stopPropagation(); deleteStore(name); });
                 container.appendChild(tile);
             });
         }
 
-        function openStoreDetail(storeName) {
+        // ----- open store detail -----
+        function openStore(storeName) {
             document.getElementById('homeView').classList.add('hidden');
             document.getElementById('detailView').classList.remove('hidden');
             document.getElementById('detailStoreTitle').textContent = storeName;
-            renderStoreDetail(storeName);
-            // store current store for actions
             window._currentStore = storeName;
+            renderStoreDetail(storeName);
         }
 
+        function goHome() {
+            document.getElementById('detailView').classList.add('hidden');
+            document.getElementById('homeView').classList.remove('hidden');
+            renderHome();
+            window._currentStore = null;
+        }
+
+        // ----- render detail with sorting & stats -----
         function renderStoreDetail(storeName) {
             const container = document.getElementById('categoryContainer');
             container.innerHTML = '';
             const categories = data.stores[storeName] || {};
             const catNames = Object.keys(categories);
-            if (catNames.length === 0) {
-                container.innerHTML = `<div class="empty-state" style="padding:30px 0;">No categories yet.<br> Add one above.</div>`;
+            document.getElementById('catCounter').textContent = catNames.length;
+
+            if (!catNames.length) {
+                container.innerHTML = `<div class="empty-state">No categories yet.<br>Add one above.</div>`;
                 return;
             }
-            catNames.sort();
-            catNames.forEach(cat => {
+
+            // build array with stats
+            const catStats = catNames.map(cat => {
                 const items = categories[cat] || [];
-                const block = document.createElement('div');
-                block.className = 'category-block';
-                block.dataset.category = cat;
+                const stats = getCategoryStats(items);
+                return { name: cat, items, remaining: stats.remaining, finished: stats.finished };
+            });
+
+            // sort: high remaining first, then by name
+            catStats.sort((a, b) => {
+                if (a.remaining !== b.remaining) return b.remaining - a.remaining;
+                return a.name.localeCompare(b.name);
+            });
+
+            catStats.forEach(({ name: cat, items, remaining, finished }) => {
+                const isDone = remaining === 0 && items.length > 0;
+                const card = document.createElement('div');
+                card.className = `category-card${isDone ? ' done' : ''}`;
+                card.dataset.category = cat;
+
                 // header
                 const head = document.createElement('div');
                 head.className = 'category-head';
-                head.innerHTML = `<span>${cat}</span>
-                    <button class="del-cat-btn" data-store="${storeName}" data-cat="${cat}" title="delete category">✕</button>`;
-                block.appendChild(head);
+                head.innerHTML = `
+                    <span>${cat}</span>
+                    <div class="flex">
+                        <span class="cat-stats">${remaining}R · ${finished}F</span>
+                        <button class="del-cat" data-store="${storeName}" data-cat="${cat}" title="delete category">✕</button>
+                    </div>
+                `;
+                card.appendChild(head);
 
-                // item list
+                // item list (hidden by default, but we show only if there are items? we keep hidden and toggle on click)
+                const listWrapper = document.createElement('div');
+                listWrapper.className = 'item-list-wrapper';
+                listWrapper.style.display = 'none'; // hidden initially
+
                 const ul = document.createElement('ul');
                 ul.className = 'item-list';
                 ul.id = `list-${storeName}-${cat}`;
@@ -414,44 +242,46 @@
                     const nameSpan = document.createElement('span');
                     nameSpan.className = `item-name ${item.struck ? 'strikethrough' : ''}`;
                     nameSpan.textContent = item.name;
-                    nameSpan.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        toggleStrike(storeName, cat, idx);
-                    });
+                    nameSpan.addEventListener('click', (e) => { e.stopPropagation(); toggleStrike(storeName, cat, idx); });
                     const actions = document.createElement('div');
                     actions.className = 'item-actions';
                     const delBtn = document.createElement('button');
                     delBtn.className = 'del-item';
                     delBtn.textContent = '✕';
-                    delBtn.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        deleteItem(storeName, cat, idx);
-                    });
+                    delBtn.addEventListener('click', (e) => { e.stopPropagation(); deleteItem(storeName, cat, idx); });
                     actions.appendChild(delBtn);
                     li.appendChild(nameSpan);
                     li.appendChild(actions);
                     ul.appendChild(li);
                 });
-                block.appendChild(ul);
+                listWrapper.appendChild(ul);
 
                 // add item row
                 const addRow = document.createElement('div');
                 addRow.className = 'add-item-row';
                 addRow.innerHTML = `<input type="text" placeholder="Add item …" class="item-input" data-store="${storeName}" data-cat="${cat}" />
                     <button class="btn btn-sm add-item-btn" data-store="${storeName}" data-cat="${cat}">+</button>`;
-                block.appendChild(addRow);
+                listWrapper.appendChild(addRow);
 
-                container.appendChild(block);
+                card.appendChild(listWrapper);
+
+                // toggle list visibility on header click
+                head.addEventListener('click', (e) => {
+                    if (e.target.closest('button')) return;
+                    const wrapper = card.querySelector('.item-list-wrapper');
+                    if (wrapper) wrapper.style.display = wrapper.style.display === 'none' ? 'block' : 'none';
+                });
+
+                container.appendChild(card);
             });
 
-            // attach events for category delete
-            document.querySelectorAll('.del-cat-btn').forEach(btn => {
+            // attach delete category events
+            document.querySelectorAll('.del-cat').forEach(btn => {
                 btn.addEventListener('click', function(e) {
+                    e.stopPropagation();
                     const store = this.dataset.store;
                     const cat = this.dataset.cat;
-                    if (confirm(`Delete category "${cat}"?`)) {
-                        deleteCategory(store, cat);
-                    }
+                    if (confirm(`Delete category "${cat}"?`)) deleteCategory(store, cat);
                 });
             });
 
@@ -480,39 +310,30 @@
             const input = document.getElementById('storeInput');
             const name = input.value.trim();
             if (!name) return;
-            if (data.stores[name]) {
-                alert('Store already exists.');
-                return;
-            }
+            if (data.stores[name]) { alert('Store already exists.'); return; }
             data.stores[name] = {};
             saveData();
             renderHome();
             input.value = '';
         }
 
-        function deleteStore(storeName) {
-            if (!confirm(`Delete store "${storeName}" and all its content?`)) return;
-            delete data.stores[storeName];
+        function deleteStore(name) {
+            if (!confirm(`Delete store "${name}"?`)) return;
+            delete data.stores[name];
             saveData();
             renderHome();
-            if (window._currentStore === storeName) {
-                document.getElementById('detailView').classList.add('hidden');
-                document.getElementById('homeView').classList.remove('hidden');
-            }
+            if (window._currentStore === name) goHome();
         }
 
         function addCategoryFromDetail() {
             const store = window._currentStore;
             if (!store) return;
             const input = document.getElementById('categoryInput');
-            const catName = input.value.trim();
-            if (!catName) return;
+            const cat = input.value.trim();
+            if (!cat) return;
             if (!data.stores[store]) data.stores[store] = {};
-            if (data.stores[store][catName]) {
-                alert('Category already exists.');
-                return;
-            }
-            data.stores[store][catName] = [];
+            if (data.stores[store][cat]) { alert('Category exists.'); return; }
+            data.stores[store][cat] = [];
             saveData();
             renderStoreDetail(store);
             input.value = '';
@@ -521,58 +342,37 @@
         function deleteCategory(store, cat) {
             if (!data.stores[store]) return;
             delete data.stores[store][cat];
-            if (Object.keys(data.stores[store]).length === 0) {
-                // if no categories left, ask to delete store?
-                if (confirm(`"${store}" has no categories. Remove this store?`)) {
-                    deleteStore(store);
-                    return;
-                }
+            if (!Object.keys(data.stores[store]).length) {
+                if (confirm(`"${store}" is empty. Remove store?`)) { deleteStore(store); return; }
             }
             saveData();
             renderStoreDetail(store);
         }
 
-        function addItem(store, cat, itemName) {
-            if (!itemName) return;
+        function addItem(store, cat, name) {
+            if (!name) return;
             if (!data.stores[store]) data.stores[store] = {};
             if (!data.stores[store][cat]) data.stores[store][cat] = [];
-            // capitalize first letter
-            itemName = itemName.charAt(0).toUpperCase() + itemName.slice(1);
-            data.stores[store][cat].push({ name: itemName, struck: false });
+            name = name.charAt(0).toUpperCase() + name.slice(1);
+            data.stores[store][cat].push({ name, struck: false });
             saveData();
             renderStoreDetail(store);
         }
 
-        function deleteItem(store, cat, index) {
-            if (!data.stores[store] || !data.stores[store][cat]) return;
-            data.stores[store][cat].splice(index, 1);
-            if (data.stores[store][cat].length === 0) {
-                // if category empty, optionally remove category
-                if (confirm(`Category "${cat}" is empty. Remove it?`)) {
-                    deleteCategory(store, cat);
-                    return;
-                }
+        function deleteItem(store, cat, idx) {
+            if (!data.stores[store]?.[cat]) return;
+            data.stores[store][cat].splice(idx, 1);
+            if (!data.stores[store][cat].length) {
+                if (confirm(`Category "${cat}" is empty. Remove it?`)) { deleteCategory(store, cat); return; }
             }
             saveData();
             renderStoreDetail(store);
         }
 
-        function toggleStrike(store, cat, index) {
-            if (!data.stores[store] || !data.stores[store][cat]) return;
-            const item = data.stores[store][cat][index];
-            if (item) {
-                item.struck = !item.struck;
-                saveData();
-                renderStoreDetail(store);
-            }
-        }
-
-        // ----- navigation -----
-        function goHome() {
-            document.getElementById('detailView').classList.add('hidden');
-            document.getElementById('homeView').classList.remove('hidden');
-            renderHome();
-            window._currentStore = null;
+        function toggleStrike(store, cat, idx) {
+            if (!data.stores[store]?.[cat]) return;
+            const item = data.stores[store][cat][idx];
+            if (item) { item.struck = !item.struck; saveData(); renderStoreDetail(store); }
         }
 
         // ----- init -----
@@ -580,70 +380,14 @@
             loadData();
             renderHome();
 
-            // event listeners
             document.getElementById('addStoreBtn').addEventListener('click', addStore);
-            document.getElementById('storeInput').addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') addStore();
-            });
+            document.getElementById('storeInput').addEventListener('keypress', e => { if (e.key === 'Enter') addStore(); });
             document.getElementById('addCategoryBtn').addEventListener('click', addCategoryFromDetail);
-            document.getElementById('categoryInput').addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') addCategoryFromDetail();
-            });
+            document.getElementById('categoryInput').addEventListener('keypress', e => { if (e.key === 'Enter') addCategoryFromDetail(); });
             document.getElementById('backHomeBtn').addEventListener('click', goHome);
 
-            // optional: delete store from home (long press not needed, but we can add a delete via tile? we keep simple)
-            // but we add hidden delete via double click? we'll add a small delete icon later? 
-            // Actually we need a way to delete store from home. We'll add a small delete button on tile.
-            // We'll re-render home with delete button on each tile.
-            // Patch renderHome to include delete.
-            const originalRender = renderHome;
-            renderHome = function() {
-                const container = document.getElementById('storeList');
-                container.innerHTML = '';
-                const storeNames = Object.keys(data.stores);
-                if (storeNames.length === 0) {
-                    container.innerHTML = `<div class="empty-state">✨ No stores yet. Add one above.</div>`;
-                    return;
-                }
-                storeNames.sort();
-                storeNames.forEach(name => {
-                    const tile = document.createElement('div');
-                    tile.className = 'store-tile';
-                    const categoryCount = Object.keys(data.stores[name] || {}).length;
-                    tile.innerHTML = `<span>${name}</span>
-                        <div class="flex">
-                            <span class="badge">${categoryCount}</span>
-                            <button class="btn btn-sm btn-outline" style="background:transparent; border:none; color:#94a3b8; padding:0 6px; font-size:1.2rem;" data-store="${name}" title="delete store">✕</button>
-                        </div>`;
-                    tile.addEventListener('click', (e) => {
-                        // ignore if click on button
-                        if (e.target.tagName === 'BUTTON') return;
-                        openStoreDetail(name);
-                    });
-                    const delBtn = tile.querySelector('button');
-                    if (delBtn) {
-                        delBtn.addEventListener('click', (e) => {
-                            e.stopPropagation();
-                            deleteStore(name);
-                        });
-                    }
-                    container.appendChild(tile);
-                });
-            };
-            // re-run render with new function
-            renderHome();
-
-            // also patch renderStoreDetail to handle empty category deletion etc.
-            // and ensure we reattach events after each render
-            const origRenderDetail = renderStoreDetail;
-            renderStoreDetail = function(storeName) {
-                origRenderDetail(storeName);
-                // reattach category delete & add item events (already in orig)
-            };
-            // set current store if any
             window._currentStore = null;
         }
-
         init();
     })();
 </script>
