@@ -248,45 +248,60 @@
         }
 
         // ----- CLOUD SYNC -----
-        function scheduleCloudSync() {
-            if (!cloudEnabled) return;
-            if (syncTimeout) clearTimeout(syncTimeout);
-            syncTimeout = setTimeout(() => {
-                syncToCloud();
-            }, 3000);
-        }
+
+        let isSyncing = false;
 
         async function syncToCloud() {
-            if (isSyncing || !cloudEnabled) return;
-            
-            // Check if URL is configured
-            if (BACKUP_URL === 'https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec') {
-                updateCloudStatus('offline', '⚠️ Set BACKUP_URL in code');
-                return;
-            }
-
+        
+            if (isSyncing) return;
             isSyncing = true;
-            updateCloudStatus('saving', '☁️ Syncing...');
-
+        
+            updateCloudStatus("saving", "Saving...");
+        
             try {
-                const storeName = window._currentStore || 'all-stores';
-                const dataStr = localStorage.getItem('groceryStoresData');
-                
-                if (!dataStr) {
-                    updateCloudStatus('idle', '☁️ No data to sync');
-                    isSyncing = false;
-                    return;
-                }
-
+        
                 const response = await fetch(BACKUP_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "text/plain;charset=utf-8"
+                    },
                     body: JSON.stringify({
-                        action: 'save',
-                        store: storeName,
-                        content: JSON.parse(dataStr)
+                        content: data
                     })
                 });
+        
+                const result = await response.json();
+        
+                if(result.success){
+        
+                    updateCloudStatus(
+                        "idle",
+                        "Saved ✓ " + new Date().toLocaleTimeString()
+                    );
+        
+                }else{
+        
+                    updateCloudStatus(
+                        "error",
+                        result.message
+                    );
+        
+                }
+        
+            } catch(err){
+        
+                console.log(err);
+        
+                updateCloudStatus(
+                    "error",
+                    "Offline"
+                );
+        
+            }
+        
+            isSyncing = false;
+        
+        }
 
                 // Check if response is JSON
                 const contentType = response.headers.get('content-type');
